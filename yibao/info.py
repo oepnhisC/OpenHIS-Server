@@ -2,24 +2,16 @@ import time
 import random
 import hashlib
 from datetime import datetime
+import json
+from settings import paasid,secretKey,hospitalID,hospitalName,mdtrtarea_admvs,yibaoUrl
 
 # 固定字符集
 characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 numbers = "0123456789"
 
-#填入自己医院的相关信息
-paasid = 'paasid'
-secretKey = 'secretKey'
-hospitalID = 'hospitalID'
-hospitalName = 'hospitalName'
-mdtrtarea_admvs = '123456'
-
-#接口地址
-url = 'http://xxxxx/'
-
 
 def create_request_Data(infno,inputJson,insuplc_admdvs=mdtrtarea_admvs):
-    requestURL = url + infno
+    requestURL = yibaoUrl + infno
     timestamp = str(int(time.time()))
     nonce = ''.join(random.choice(characters) for _ in range(32))
     signature = hashlib.sha256( (timestamp+secretKey+nonce+timestamp).encode('utf-8') ).hexdigest()
@@ -56,4 +48,6 @@ def create_request_Data(infno,inputJson,insuplc_admdvs=mdtrtarea_admvs):
             "enc_type":"",
             "input": inputJson
         }
-    return requestURL,postdata,posthead
+    
+    requestData = json.dumps(postdata)
+    return requestURL,requestData,posthead

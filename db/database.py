@@ -1,12 +1,21 @@
 import pyodbc
+import pymssql
+from settings import dbIP,dbName,dbUser,dbPassword
 
 def get_connection():
+
     conn = pyodbc.connect(
-        'DRIVER={ODBC Driver 17 for SQL Server};'
-        'SERVER=your_server;'
-        'DATABASE=your_database;'
-        'UID=your_username;'
-        'PWD=your_password'
-    )
+        'DRIVER={SQL Server};'
+        'SERVER='+dbIP+';'
+        'DATABASE='+dbName+';'
+        'UID='+dbUser+';'
+        'PWD='+dbPassword+';'
+        )
     return conn
 
+
+def get_JieZhang_connection():
+    conn = pymssql.connect(server=dbIP, user=dbUser, password=dbPassword
+                       , database=dbName,charset='cp936'
+                       ,autocommit=True)
+    return conn

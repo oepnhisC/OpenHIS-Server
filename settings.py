@@ -11,7 +11,7 @@ yibaoUrl  = '医保中心给的接口地址'
 
 
 # 数据库配置
-dbIP = '数据库IP地址'
-dbName = '数据库名'
-dbUser = '数据库用户名'
-dbPassword = '数据库密码'
+dbIP = '127.0.0.1'
+dbName = 'openhis'
+dbUser = 'openhis'
+dbPassword = 'openhis'

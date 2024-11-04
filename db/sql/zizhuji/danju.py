@@ -17,7 +17,19 @@ and '1'<> ?
 
 
 danjumingxiSQL = '''
-select 1
+select 
+'DR' fitem
+,40.0 fprice
+,'次' funit
+,1 fcount
+,40 famount
+union all 
+select 
+'党参' fitem
+,2 fprice
+,'g' funit
+,10 fcount
+,20 famount
 where '1'<> ?
 and '1' not in  
 '''

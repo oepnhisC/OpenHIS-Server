@@ -38,6 +38,8 @@ and '1' not in
 
 danjuZongJiaSQL = '''
 select 1
+where '1'<> ?
+and '1' not in  
 '''
 
 

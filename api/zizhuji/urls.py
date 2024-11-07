@@ -5,8 +5,8 @@ import requests
 import json
 from db.database import get_connection,get_JieZhang_connection
 from db.sql.zizhuji.payDetails import payDetailsSql
-from db.sql.zizhuji.danju import danjuSQL,danjumingxiSQL,danjuZongJiaSQL,printInfoHeaderSQL
-
+from db.sql.zizhuji.danju import danjuSQL,danjumingxiSQL,danjuZongJiaSQL
+from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL
 
 zizhujiAPI = APIRouter(prefix="/zizhuji",tags=["自助机"])
 
@@ -137,9 +137,10 @@ def wechatpayQRCode(request: Request):
 
     return  responJson
 
+
 # 打印信息
-@zizhujiAPI.get('/printInfo')
-def printInfo(request: Request):
+@zizhujiAPI.get('/printInfoHeader')
+def printInfoHeader(request: Request):
     # djhlist = request.app.state.info['fjzid']
     fjzid = '587728'
 
@@ -157,3 +158,81 @@ def printInfo(request: Request):
         responJson = { 'code':0,'result':data }
 
     return  responJson
+
+
+
+
+
+# 费用信息
+@zizhujiAPI.get('/feiYong')
+def printInfoHeader(request: Request):
+    # djhlist = request.app.state.info['fjzid']
+    fjzid = '587728'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(zongFeiYongSQL, (fjzid))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    fzfy = 0
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        row=rows[0]
+        fzfy = row[0]
+
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(fapiaoURLSQL, (fjzid))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    furl = ''
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        row=rows[0]
+        furl = row[0]
+    
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(zhifuFangshiSQL, (fjzid))
+    columns = [column[0] for column in cursor.description]
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    fzffs = []
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        fzffs = [dict(zip(columns, row)) for row in rows]
+
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(feibieSQL, (fjzid))
+    columns = [column[0] for column in cursor.description]
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    ffbs = []
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        ffbs = [dict(zip(columns, row)) for row in rows]
+
+    
+
+
+    responJson = { 'code':0,'fzfy':fzfy,'fzffs':fzffs ,'furl':furl ,'ffbs':ffbs }
+
+    return  responJson
+
+

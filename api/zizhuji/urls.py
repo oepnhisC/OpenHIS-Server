@@ -6,7 +6,7 @@ import json
 from db.database import get_connection,get_JieZhang_connection
 from db.sql.zizhuji.payDetails import payDetailsSql
 from db.sql.zizhuji.danju import danjuSQL,danjumingxiSQL,danjuZongJiaSQL
-from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL
+from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL,zhiyindanSQL,yingxiangdanSQL,zhuyaozhenduanSQL
 
 zizhujiAPI = APIRouter(prefix="/zizhuji",tags=["自助机"])
 
@@ -236,3 +236,66 @@ def printInfoHeader(request: Request):
     return  responJson
 
 
+@zizhujiAPI.get('/zhiyindan')
+def zhiyindan(request: Request):
+    fjzid = '587723'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(zhiyindanSQL, (fjzid,fjzid))
+    rows = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    cursor.close()
+    conn.close()
+    fzfy = 0
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+    
+    return  responJson
+
+
+
+@zizhujiAPI.get('/zhuyaozhenduan')
+def zhuyaozhenduan(request: Request):
+    fjzid = '587723'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(zhuyaozhenduanSQL, (fjzid))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    fzyzd = 0
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+    else:
+        row = rows[0]
+        fzyzd = row[0]
+        responJson = { 'code':0,'result':fzyzd }
+
+    return  responJson
+
+
+@zizhujiAPI.get('/yingxiangdan')
+def yingxiangdan(request: Request):
+    fjzid = '587723'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(yingxiangdanSQL, (fjzid,fjzid))
+    rows = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    cursor.close()
+    conn.close()
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+    
+    return  responJson

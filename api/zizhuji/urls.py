@@ -6,7 +6,7 @@ import json
 from db.database import get_connection,get_JieZhang_connection
 from db.sql.zizhuji.payDetails import payDetailsSql
 from db.sql.zizhuji.danju import danjuSQL,danjumingxiSQL,danjuZongJiaSQL
-from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL,zhiyindanSQL,yingxiangdanSQL,zhuyaozhenduanSQL
+from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL,zhiyindanSQL,yingxiangdanSQL,zhuyaozhenduanSQL,weicaidanSQL,caixiedanSQL,fukedanSQL
 
 zizhujiAPI = APIRouter(prefix="/zizhuji",tags=["自助机"])
 
@@ -299,3 +299,73 @@ def yingxiangdan(request: Request):
         responJson = { 'code':0,'result':data }
     
     return  responJson
+
+
+
+@zizhujiAPI.get('/weicaidan')
+def weicaidan(request: Request):
+    fjzid = '585818'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(weicaidanSQL, (fjzid))
+    rows = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    cursor.close()
+    conn.close()
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+    
+    return  responJson
+
+
+
+
+
+@zizhujiAPI.get('/caixiedan')
+def caixiedan(request: Request):
+    fjzid = '587717'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(caixiedanSQL, (fjzid))
+    rows = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    cursor.close()
+    conn.close()
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+    
+    return  responJson
+
+
+
+
+@zizhujiAPI.get('/fukedan')
+def fukedan(request: Request):
+    fjzid = '587717'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(fukedanSQL, (fjzid))
+    rows = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    cursor.close()
+    conn.close()
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+    
+    return  responJson
+

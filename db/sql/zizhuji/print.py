@@ -44,3 +44,9 @@ fukedanSQL = '''
 select 1
 where 1<>?
 '''
+
+
+jianyandanSQL = '''
+select 1
+where 1<>?
+'''

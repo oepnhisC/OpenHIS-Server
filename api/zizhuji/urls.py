@@ -6,7 +6,7 @@ import json
 from db.database import get_connection,get_JieZhang_connection
 from db.sql.zizhuji.payDetails import payDetailsSql
 from db.sql.zizhuji.danju import danjuSQL,danjumingxiSQL,danjuZongJiaSQL
-from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL,zhiyindanSQL,yingxiangdanSQL,zhuyaozhenduanSQL,weicaidanSQL,caixiedanSQL,fukedanSQL
+from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL,zhiyindanSQL,yingxiangdanSQL,zhuyaozhenduanSQL,weicaidanSQL,caixiedanSQL,fukedanSQL,jianyandanSQL
 
 zizhujiAPI = APIRouter(prefix="/zizhuji",tags=["自助机"])
 
@@ -235,7 +235,7 @@ def printInfoHeader(request: Request):
 
     return  responJson
 
-
+# 指引单
 @zizhujiAPI.get('/zhiyindan')
 def zhiyindan(request: Request):
     fjzid = '587723'
@@ -258,7 +258,7 @@ def zhiyindan(request: Request):
     return  responJson
 
 
-
+# 主要诊断
 @zizhujiAPI.get('/zhuyaozhenduan')
 def zhuyaozhenduan(request: Request):
     fjzid = '587723'
@@ -279,7 +279,7 @@ def zhuyaozhenduan(request: Request):
 
     return  responJson
 
-
+# 影像单
 @zizhujiAPI.get('/yingxiangdan')
 def yingxiangdan(request: Request):
     fjzid = '587723'
@@ -301,7 +301,7 @@ def yingxiangdan(request: Request):
     return  responJson
 
 
-
+# 卫材领取单
 @zizhujiAPI.get('/weicaidan')
 def weicaidan(request: Request):
     fjzid = '585818'
@@ -325,10 +325,10 @@ def weicaidan(request: Request):
 
 
 
-
+# 采血单
 @zizhujiAPI.get('/caixiedan')
 def caixiedan(request: Request):
-    fjzid = '587717'
+    fjzid = '587743'
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -348,7 +348,7 @@ def caixiedan(request: Request):
 
 
 
-
+# 妇科治疗单
 @zizhujiAPI.get('/fukedan')
 def fukedan(request: Request):
     fjzid = '587717'
@@ -369,3 +369,23 @@ def fukedan(request: Request):
     
     return  responJson
 
+# 检验条码
+@zizhujiAPI.get('/jianyantiaoma')
+def jianyantiaoma(request: Request):
+    fjzid = '587743'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(jianyandanSQL, (fjzid))
+    rows = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    cursor.close()
+    conn.close()
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+    
+    return  responJson

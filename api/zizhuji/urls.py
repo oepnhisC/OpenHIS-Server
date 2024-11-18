@@ -3,10 +3,14 @@ from yibao.info import *
 from pydantic import BaseModel
 import requests
 import json
-from db.database import get_connection,get_JieZhang_connection
+from db.database import get_connection
 from db.sql.zizhuji.payDetails import payDetailsSql
 from db.sql.zizhuji.danju import danjuSQL,danjumingxiSQL,danjuZongJiaSQL
-from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL,zhiyindanSQL,yingxiangdanSQL,zhuyaozhenduanSQL,weicaidanSQL,caixiedanSQL,fukedanSQL,jianyandanSQL
+from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL,zhiyindanSQL,yingxiangdanSQL,zhuyaozhenduanSQL,weicaidanSQL,caixiedanSQL,fukedanSQL,jianyandanSQL,fapiaoSQL
+from io import BytesIO
+import fitz  # PyMuPDF
+import base64
+
 
 zizhujiAPI = APIRouter(prefix="/zizhuji",tags=["自助机"])
 
@@ -106,9 +110,9 @@ def danjumingxi(request: Request,danjumingxi:DanJuMingXi):
         data = [dict(zip(columns, row)) for row in rows]
         responJson = { 'code':0,'result':data }
         request.app.state.info = {'sfz':request.app.state.info['sfz'],
-                                  'ip':request.client.host,
                                    'fjzid':danjumingxi.fjzid,
                                     'fdjh':djhlist}
+        request.app.state.ip = request.client.host
         
     return  responJson
 
@@ -130,10 +134,11 @@ def wechatpayQRCode(request: Request):
     if row[0] == '0':
         responJson = {'code':1,'result':'未查询到相关信息'}
     else:
+        request.app.state.amount = row[0]
         # 调用微信支付接口生成付款链接
-        
         data = {'money':row[0],'payurl':'http://www.baidu.com'}
         responJson = { 'code':0,'result':data }
+        
 
     return  responJson
 
@@ -387,5 +392,57 @@ def jianyantiaoma(request: Request):
     else:
         data = [dict(zip(columns, row)) for row in rows]
         responJson = { 'code':0,'result':data }
+    
+    return  responJson
+
+
+# 发票信息
+@zizhujiAPI.get('/fapiao')
+def fapiao(request: Request):
+    fjzid = '587728'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(fapiaoSQL, (fjzid))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    if len(rows) == 0:
+
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        row = rows[0]
+        ffpurl = 'https://' +row[0]
+        response = requests.get(ffpurl)
+        result = []
+        if response.status_code == 200:
+            pdf_content = BytesIO(response.content)
+    
+            # 用PyMuPDF将PDF转换为图片
+            doc = fitz.open("pdf", pdf_content)
+            print(len(doc))
+            # 遍历PDF中的每一页
+            for page_num in range(len(doc)):
+                page = doc.load_page(page_num)  # 加载页面
+                zoom_x = 2.0  # horizontal zoom
+                zoom_y = 2.0  # vertical zoom
+                mat = fitz.Matrix(zoom_x, zoom_y)
+                pix = page.get_pixmap(matrix=mat) # 将页面转换为pixmap对象
+                
+                image_stream = BytesIO(pix.tobytes())
+                image_stream.seek(0)
+                image_data = image_stream.read()
+                image_base64 = base64.b64encode(image_data).decode('utf-8')
+                img_data = f'data:image/jpeg;base64,{image_base64}'
+                result.append(img_data)
+
+
+            # 关闭文档
+            doc.close()
+        else:
+            responJson = {'code':1,'result':'未查询到相关信息'}
+            return  responJson
+        responJson = { 'code':0,'result':result }
     
     return  responJson

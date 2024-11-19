@@ -82,7 +82,27 @@ def test(request: Request, pingzheng:PingZheng):
     else:
         data = [dict(zip(columns, row)) for row in rows]
         responJson = { 'code':0,'result':data }
-        request.app.state.info = {'sfz':'AAABBB123'}
+        request.app.state.sfz = 'AAABBB123'
+    
+    return  responJson
+
+
+
+@zizhujiAPI.get("/danJuAgain")
+def danJuAgain(request: Request):
+    sfz =request.app.state.sfz
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(danjuSQL, (sfz,sfz))
+    rows = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    cursor.close()
+    conn.close()
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
     
     return  responJson
 
@@ -109,7 +129,7 @@ def danjumingxi(request: Request,danjumingxi:DanJuMingXi):
     else:
         data = [dict(zip(columns, row)) for row in rows]
         responJson = { 'code':0,'result':data }
-        request.app.state.info = {'sfz':request.app.state.info['sfz'],
+        request.app.state.info = {
                                    'fjzid':danjumingxi.fjzid,
                                     'fdjh':djhlist}
         request.app.state.ip = request.client.host

@@ -166,8 +166,8 @@ def wechatpayQRCode(request: Request):
 # 打印信息
 @zizhujiAPI.get('/printInfoHeader')
 def printInfoHeader(request: Request):
-    # djhlist = request.app.state.info['fjzid']
-    fjzid = '587728'
+    fjzid = request.app.state.jzid
+    # fjzid = '587728'
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -191,9 +191,9 @@ def printInfoHeader(request: Request):
 # 费用信息
 @zizhujiAPI.get('/feiYong')
 def printInfoHeader(request: Request):
-    # djhlist = request.app.state.info['fjzid']
-    fjzid = '587728'
-
+    fjzid = request.app.state.jzid
+    # fjzid = '587728'
+    # 总费用
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(zongFeiYongSQL, (fjzid))
@@ -208,7 +208,7 @@ def printInfoHeader(request: Request):
         row=rows[0]
         fzfy = row[0]
 
-
+    # 发票url
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(fapiaoURLSQL, (fjzid))
@@ -217,13 +217,15 @@ def printInfoHeader(request: Request):
     conn.close()
     furl = ''
     if len(rows) == 0:
-        responJson = {'code':1,'result':'未查询到相关信息'}
-        return  responJson
+        # responJson = {'code':1,'result':'未查询到相关信息'}
+        # return  responJson
+        furl = ''
     else:
         row=rows[0]
         furl = row[0]
     
 
+    # 支付方式
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(zhifuFangshiSQL, (fjzid))
@@ -238,7 +240,7 @@ def printInfoHeader(request: Request):
     else:
         fzffs = [dict(zip(columns, row)) for row in rows]
 
-    
+    # 费别
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(feibieSQL, (fjzid))
@@ -253,8 +255,6 @@ def printInfoHeader(request: Request):
     else:
         ffbs = [dict(zip(columns, row)) for row in rows]
 
-    
-
 
     responJson = { 'code':0,'fzfy':fzfy,'fzffs':fzffs ,'furl':furl ,'ffbs':ffbs }
 
@@ -263,8 +263,8 @@ def printInfoHeader(request: Request):
 # 指引单
 @zizhujiAPI.get('/zhiyindan')
 def zhiyindan(request: Request):
-    fjzid = '587723'
-
+    # fjzid = '587723'
+    fjzid = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(zhiyindanSQL, (fjzid,fjzid))
@@ -286,8 +286,8 @@ def zhiyindan(request: Request):
 # 主要诊断
 @zizhujiAPI.get('/zhuyaozhenduan')
 def zhuyaozhenduan(request: Request):
-    fjzid = '587723'
-
+    # fjzid = '587723'
+    fjzid = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(zhuyaozhenduanSQL, (fjzid))
@@ -307,8 +307,8 @@ def zhuyaozhenduan(request: Request):
 # 影像单
 @zizhujiAPI.get('/yingxiangdan')
 def yingxiangdan(request: Request):
-    fjzid = '587723'
-
+    # fjzid = '587723'
+    fjzid = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(yingxiangdanSQL, (fjzid,fjzid))
@@ -329,8 +329,8 @@ def yingxiangdan(request: Request):
 # 卫材领取单
 @zizhujiAPI.get('/weicaidan')
 def weicaidan(request: Request):
-    fjzid = '585818'
-
+    # fjzid = '585818'
+    fjzid = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(weicaidanSQL, (fjzid))
@@ -353,8 +353,8 @@ def weicaidan(request: Request):
 # 采血单
 @zizhujiAPI.get('/caixiedan')
 def caixiedan(request: Request):
-    fjzid = '587743'
-
+    # fjzid = '587743'
+    fjzid = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(caixiedanSQL, (fjzid))
@@ -376,8 +376,8 @@ def caixiedan(request: Request):
 # 妇科治疗单
 @zizhujiAPI.get('/fukedan')
 def fukedan(request: Request):
-    fjzid = '587717'
-
+    # fjzid = '587717'
+    fjzid = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(fukedanSQL, (fjzid))
@@ -397,8 +397,8 @@ def fukedan(request: Request):
 # 检验条码
 @zizhujiAPI.get('/jianyantiaoma')
 def jianyantiaoma(request: Request):
-    fjzid = '587743'
-
+    # fjzid = '587743'
+    fjzid = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(jianyandanSQL, (fjzid))
@@ -419,7 +419,8 @@ def jianyantiaoma(request: Request):
 # 发票信息
 @zizhujiAPI.get('/fapiao')
 def fapiao(request: Request):
-    fjzid = '587728'
+    # fjzid = '587728'
+    fjzid = request.app.state.jzid
 
     conn = get_connection()
     cursor = conn.cursor()

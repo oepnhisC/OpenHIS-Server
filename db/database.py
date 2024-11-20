@@ -16,6 +16,7 @@ def get_connection():
 
 def get_JieZhang_connection():
     conn = pymssql.connect(server=dbIP, user=dbUser, password=dbPassword
-                       , database=dbName,charset='cp936'
-                       ,autocommit=True)
+                       , database=dbName,charset='utf8'
+                       ,autocommit=True
+                       )
     return conn

@@ -50,3 +50,9 @@ jianyandanSQL = '''
 select 1
 where 1<>?
 '''
+
+
+fapiaoSQL = '''
+select 1
+where 1<>?
+'''

@@ -5,7 +5,7 @@ import requests
 import json
 from db.database import get_connection
 from db.sql.zizhuji.payDetails import payDetailsSql
-from db.sql.zizhuji.danju import danjuSQL,danjumingxiSQL,danjuZongJiaSQL
+from db.sql.zizhuji.danju import danjuSQL,danjumingxiSQL,danjuZongJiaSQL,personInfo_mzhSQL
 from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL,zhiyindanSQL,yingxiangdanSQL,zhuyaozhenduanSQL,weicaidanSQL,caixiedanSQL,fukedanSQL,jianyandanSQL,fapiaoSQL
 from io import BytesIO
 import fitz  # PyMuPDF
@@ -65,13 +65,102 @@ def dzybpz(pingzheng:PingZheng):
 
     return  responJson
 
+# 获取人员信息
+@zizhujiAPI.post("/personInfo")
+def personInfo(request: Request,pingzheng:PingZheng):
+    shuru = pingzheng.number
+    if (shuru) :
+        if (len(shuru) == 10):
+            print('门诊号',shuru)
+        elif (len(shuru) == 28):
+            print('电子医保凭证',shuru)
+        else:
+            print('非法输入')
+            responJson = {'code':1,'result':'非法输入'}
+            return  responJson
+    else:
+        print('未输入任何信息')
+        responJson = {'code':1,'result':'未输入任何信息'}
+        return  responJson
+
+    
+    if( len(shuru) == 10):
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(personInfo_mzhSQL, (shuru,))
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        # print(rows)
+        if len(rows) == 0:
+            responJson = {'code':1,'result':'未查询到相关信息'}
+        else:
+            row = rows[0]
+            sfz = row[0]
+            qtzj = row[1]
+            if sfz == '' and qtzj == '':
+                responJson = {'code':2,'result':'该就诊卡没有身份证信息'}
+            else:
+                # 记录身份证、其他证件
+                request.app.state.sfz = sfz
+                request.app.state.qtzj = qtzj
+                responJson = { 'code':0,'result':'成功' }
+        return  responJson
+    elif (len(shuru) == 28):
+        requestjson = {
+            "data": {
+                "mdtrt_cert_type": "01",
+                "mdtrt_cert_no": shuru,
+                "card_sn": "",
+                "begntime": "",
+                "psn_cert_type": "",
+                "certno": "",
+                "psn_name": ""
+            }
+        }
+        
+        requestURL,postdata,posthead = create_request_Data('1101',requestjson)
+        response = requests.post(requestURL,data=postdata,headers=posthead)
+        outputdata = json.loads(response.text)
+
+        responJson = {'code':1,'result':'失败'}
+
+        if outputdata :
+            if outputdata['infcode'] == 0:
+                print(outputdata['output'])
+                certno =outputdata['output']['baseinfo']['certno']
+                responJson = { 'code':0,'result':'成功' }
+                request.app.state.sfz = certno
+                request.app.state.qtzj = ''
+            else :
+                print(outputdata['err_msg'])
+                responJson = {'code':outputdata['infcode'],'result':'查询电子医保凭证失败'}
+        else:
+            responJson = {'code':1,'result':'未知错误'}
+        return  responJson
+    
+    responJson = {'code':1,'result':'未知错误'}
+    return  responJson
+
+
 
 @zizhujiAPI.post("/test")
 def test(request: Request, pingzheng:PingZheng):
-    
+
+    sfz =request.app.state.sfz
+    qtzj =request.app.state.qtzj 
+    if (sfz == '' and qtzj == ''):
+        responJson = {'code':99,'result':'无身份证信息'}
+        return  responJson
+    zj = ''
+    if sfz != '':
+        zj = sfz
+    elif qtzj != '':
+        zj = qtzj
+
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(danjuSQL, ('AAABBB123','AAABBB123'))
+    cursor.execute(danjuSQL, (zj,zj))
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
     cursor.close()
@@ -88,12 +177,23 @@ def test(request: Request, pingzheng:PingZheng):
 
 
 
-@zizhujiAPI.get("/danJuAgain")
-def danJuAgain(request: Request):
+@zizhujiAPI.get("/danjuInfo")
+def danjuInfo(request: Request):
     sfz =request.app.state.sfz
+    qtzj =request.app.state.qtzj 
+    if (sfz == '' and qtzj == ''):
+        responJson = {'code':99,'result':'无身份证信息'}
+        return  responJson
+
+    zj = ''
+    if sfz != '':
+        zj = sfz
+    elif qtzj != '':
+        zj = qtzj
+
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(danjuSQL, (sfz,sfz))
+    cursor.execute(danjuSQL, (zj,zj))
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
     cursor.close()
@@ -165,13 +265,17 @@ def wechatpayQRCode(request: Request):
 
 # 打印信息
 @zizhujiAPI.get('/printInfoHeader')
-def printInfoHeader(request: Request):
-    fjzid = request.app.state.jzid
-    # fjzid = '587728'
+def printInfoHeader(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
 
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(printInfoHeaderSQL, (fjzid))
+    cursor.execute(printInfoHeaderSQL, (jiezhangID))
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
     cursor.close()
@@ -190,13 +294,16 @@ def printInfoHeader(request: Request):
 
 # 费用信息
 @zizhujiAPI.get('/feiYong')
-def printInfoHeader(request: Request):
-    fjzid = request.app.state.jzid
-    # fjzid = '587728'
-    # 总费用
+def printInfoHeader(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(zongFeiYongSQL, (fjzid))
+    cursor.execute(zongFeiYongSQL, (jiezhangID))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -211,7 +318,7 @@ def printInfoHeader(request: Request):
     # 发票url
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(fapiaoURLSQL, (fjzid))
+    cursor.execute(fapiaoURLSQL, (jiezhangID))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -228,7 +335,7 @@ def printInfoHeader(request: Request):
     # 支付方式
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(zhifuFangshiSQL, (fjzid))
+    cursor.execute(zhifuFangshiSQL, (jiezhangID))
     columns = [column[0] for column in cursor.description]
     rows = cursor.fetchall()
     cursor.close()
@@ -243,7 +350,7 @@ def printInfoHeader(request: Request):
     # 费别
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(feibieSQL, (fjzid))
+    cursor.execute(feibieSQL, (jiezhangID))
     columns = [column[0] for column in cursor.description]
     rows = cursor.fetchall()
     cursor.close()
@@ -262,12 +369,16 @@ def printInfoHeader(request: Request):
 
 # 指引单
 @zizhujiAPI.get('/zhiyindan')
-def zhiyindan(request: Request):
-    # fjzid = '587723'
-    fjzid = request.app.state.jzid
+def zhiyindan(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(zhiyindanSQL, (fjzid,fjzid))
+    cursor.execute(zhiyindanSQL, (jiezhangID,jiezhangID))
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
     cursor.close()
@@ -285,12 +396,16 @@ def zhiyindan(request: Request):
 
 # 主要诊断
 @zizhujiAPI.get('/zhuyaozhenduan')
-def zhuyaozhenduan(request: Request):
-    # fjzid = '587723'
-    fjzid = request.app.state.jzid
+def zhuyaozhenduan(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(zhuyaozhenduanSQL, (fjzid))
+    cursor.execute(zhuyaozhenduanSQL, (jiezhangID))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -306,12 +421,16 @@ def zhuyaozhenduan(request: Request):
 
 # 影像单
 @zizhujiAPI.get('/yingxiangdan')
-def yingxiangdan(request: Request):
-    # fjzid = '587723'
-    fjzid = request.app.state.jzid
+def yingxiangdan(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(yingxiangdanSQL, (fjzid,fjzid))
+    cursor.execute(yingxiangdanSQL, (jiezhangID,jiezhangID))
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
     cursor.close()
@@ -328,12 +447,16 @@ def yingxiangdan(request: Request):
 
 # 卫材领取单
 @zizhujiAPI.get('/weicaidan')
-def weicaidan(request: Request):
-    # fjzid = '585818'
-    fjzid = request.app.state.jzid
+def weicaidan(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(weicaidanSQL, (fjzid))
+    cursor.execute(weicaidanSQL, (jiezhangID))
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
     cursor.close()
@@ -352,12 +475,16 @@ def weicaidan(request: Request):
 
 # 采血单
 @zizhujiAPI.get('/caixiedan')
-def caixiedan(request: Request):
-    # fjzid = '587743'
-    fjzid = request.app.state.jzid
+def caixiedan(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(caixiedanSQL, (fjzid))
+    cursor.execute(caixiedanSQL, (jiezhangID))
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
     cursor.close()
@@ -375,12 +502,16 @@ def caixiedan(request: Request):
 
 # 妇科治疗单
 @zizhujiAPI.get('/fukedan')
-def fukedan(request: Request):
-    # fjzid = '587717'
-    fjzid = request.app.state.jzid
+def fukedan(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(fukedanSQL, (fjzid))
+    cursor.execute(fukedanSQL, (jiezhangID))
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
     cursor.close()
@@ -396,12 +527,16 @@ def fukedan(request: Request):
 
 # 检验条码
 @zizhujiAPI.get('/jianyantiaoma')
-def jianyantiaoma(request: Request):
-    # fjzid = '587743'
-    fjzid = request.app.state.jzid
+def jianyantiaoma(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(jianyandanSQL, (fjzid))
+    cursor.execute(jianyandanSQL, (jiezhangID))
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
     cursor.close()
@@ -418,13 +553,17 @@ def jianyantiaoma(request: Request):
 
 # 发票信息
 @zizhujiAPI.get('/fapiao')
-def fapiao(request: Request):
-    # fjzid = '587728'
-    fjzid = request.app.state.jzid
+def fapiao(request: Request,fjiezhangID:str):
+    jiezhangID = ''
+    print('fjiezhangID',fjiezhangID)
+    if fjiezhangID != '':
+        jiezhangID = fjiezhangID
+    else:
+        jiezhangID = request.app.state.jzid
 
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(fapiaoSQL, (fjzid))
+    cursor.execute(fapiaoSQL, (jiezhangID))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()

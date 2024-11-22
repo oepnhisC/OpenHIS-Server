@@ -5,7 +5,8 @@ from api.guahao.urls import guahaoAPI
 from api.menzhen.urls import menzhenAPI
 from api.shoufei.urls import shoufeiAPI
 from api.zizhuji.urls import zizhujiAPI
-
+from api.zizhuji.jiezhangurl import zizhuji_jiezhangAPI
+from api.zizhuji.danjuAPI import danjuAPI
 
 app = FastAPI()
 
@@ -22,8 +23,8 @@ app.include_router(guahaoAPI,tags=["挂号"])
 app.include_router(menzhenAPI,tags=["门诊"])
 app.include_router(shoufeiAPI,tags=["收费"])
 app.include_router(zizhujiAPI,tags=["自助机"])
-
-
+app.include_router(zizhuji_jiezhangAPI,tags=["自助机"])
+app.include_router(danjuAPI,tags=["自助机单据"])
 
 @app.get("/")
 async def root():

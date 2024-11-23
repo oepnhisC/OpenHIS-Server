@@ -7,6 +7,7 @@ from api.shoufei.urls import shoufeiAPI
 from api.zizhuji.urls import zizhujiAPI
 from api.zizhuji.jiezhangurl import zizhuji_jiezhangAPI
 from api.zizhuji.danjuAPI import danjuAPI
+from api.yibaofuzhu.yibaofuzhuAPI import yibaofuzhuAPI
 
 app = FastAPI()
 
@@ -25,6 +26,9 @@ app.include_router(shoufeiAPI,tags=["收费"])
 app.include_router(zizhujiAPI,tags=["自助机"])
 app.include_router(zizhuji_jiezhangAPI,tags=["自助机"])
 app.include_router(danjuAPI,tags=["自助机单据"])
+
+app.include_router(yibaofuzhuAPI,tags=["医保辅助"])
+
 
 @app.get("/")
 async def root():

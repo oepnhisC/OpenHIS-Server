@@ -46,3 +46,19 @@ and '1' not in
 printInfoHeaderSQL = '''
 select 1
 '''
+
+
+
+personInfo_mzhSQL = '''
+select 10,20
+where '1'<> ?
+
+'''
+
+
+jieZhangDanjuSQL = '''
+
+select 1
+where '1'<> ? and '1' <> ?
+
+'''

@@ -14,7 +14,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    # allow_origins=["http://127.0.0.1", "http://localhost"],  # 允许 localhost 和 127.0.0.1
+    # allow_origins=["http://127.0.0.1:16888", "http://localhost:16888"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,4 +35,5 @@ async def root():
     return {"message": "Hello World"}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=10888, reload=True) 
+    # uvicorn.run(app, host="0.0.0.0", port=10888, reload=False) # 生产环境
+    uvicorn.run('main:app', host="0.0.0.0", port=10888, reload=True)  # 开发环境

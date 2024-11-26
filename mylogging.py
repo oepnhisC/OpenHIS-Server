@@ -16,16 +16,17 @@ log_config = {
             "interval": 1,       # 轮换周期为1天
             "backupCount": 30,   # 保留最近30个备份
             "formatter": "default",
-            "level": "DEBUG",
+            "level": "INFO",
             "encoding": "utf-8",  # 添加编码设置
         },
     },
     "root": {
         "handlers": ["timed_rotating_file_handler"],
-        "level": "DEBUG",
+        "level": "INFO",
     },
 }
 
 logging.config.dictConfig(log_config)
+logging.getLogger("watchfiles.main").setLevel(logging.ERROR)  # 忽略watchfiles的日志
 
 logger = logging.getLogger(__name__)

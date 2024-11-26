@@ -29,14 +29,16 @@ async def get_yibao_info(request: Request,personInfoData:PersonInfoData):
     """
     获取参保人信息
     """
+    logger.info('get_yibao_info')
     logger.info(personInfoData)
     last_time = 0
     if hasattr(request.app.state,'request_time'):
         last_time = request.app.state.request_time
 
     current_time = time()
-    if (current_time - last_time < 60):
-        remaining_time = 60 - (current_time - last_time)
+    if (current_time - last_time < 38):
+        remaining_time = 38 - (current_time - last_time)
+        remaining_time = round(remaining_time, 2)
         return {'code':120,'result':f'请求频率过高，请{remaining_time}秒后再试'}
 
     request.app.state.request_time = current_time
@@ -54,18 +56,19 @@ async def get_yibao_info(request: Request,personInfoData:PersonInfoData):
     }
     
     requestURL,postdata,posthead = create_request_Data('1101',requestjson,personInfoData.insuplc_admdvs)
+    logger.info('1101入参')
+    logger.info(postdata)
     response = requests.post(requestURL,data=postdata,headers=posthead)
     outputdata = json.loads(response.text)
-
+    logger.info('1101出参')
+    logger.info(outputdata)
     responJson = {'code':1,'result':'失败'}
 
     if outputdata :
         if outputdata['infcode'] == 0:
             output = outputdata['output']
-            logger.info(output)
             responJson = {'code':0,'result':output}
         else :
-            logger.info(outputdata['err_msg'])
             responJson = {'code':outputdata['infcode'],'result':outputdata['err_msg']}
 
     return  responJson
@@ -77,7 +80,6 @@ async def getJiaoFeiInfo(request: Request,renYuanBianHao:RenYuanBianHao):
     """
     获取缴费信息
     """
-    logger.info(renYuanBianHao)
     
     requestjson = {
         "data": {
@@ -157,10 +159,8 @@ async def getDingDianInfo(request: Request,renYuanBianHao:RenYuanBianHao):
     if outputdata :
         if outputdata['infcode'] == 0:
             output = outputdata['output']
-            logger.info(output)
             responJson = {'code':0,'result':output}
         else :
-            logger.info(outputdata['err_msg'])
             responJson = {'code':outputdata['infcode'],'result':outputdata['err_msg']}
 
     return  responJson

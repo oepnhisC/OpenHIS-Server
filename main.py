@@ -8,6 +8,8 @@ from api.zizhuji.urls import zizhujiAPI
 from api.zizhuji.jiezhangurl import zizhuji_jiezhangAPI
 from api.zizhuji.danjuAPI import danjuAPI
 from api.yibaofuzhu.yibaofuzhuAPI import yibaofuzhuAPI
+from api.shoufei.gaolingbuzhuAPI import gaolingbuzhuAPI
+
 
 app = FastAPI()
 
@@ -28,6 +30,7 @@ app.include_router(zizhuji_jiezhangAPI,tags=["自助机"])
 app.include_router(danjuAPI,tags=["自助机单据"])
 
 app.include_router(yibaofuzhuAPI,tags=["医保辅助"])
+app.include_router(gaolingbuzhuAPI,tags=["高龄补助"])
 
 
 @app.get("/")

@@ -2,6 +2,7 @@ from fastapi import APIRouter,Request
 from db.database import * 
 from pydantic import BaseModel
 from db.sql.shoufei.jiezhangdanjuSQL import jiezhangdanjuSQL
+from db.sql.baobiao.shoufei.gaolingjisuanSQL import gaolingjisuanSQL,GaoLingZiFeiHuiZongSQL
 
 shoufeiAPI = APIRouter(prefix="/shoufei",tags=["收费"])
 
@@ -36,3 +37,6 @@ async def jiezhangdanju(request: Request,shijian: ShiJian):
         responJson = { 'code':0,'result':data }
     
     return  responJson
+
+
+

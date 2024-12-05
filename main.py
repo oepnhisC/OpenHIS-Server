@@ -9,14 +9,15 @@ from api.zizhuji.jiezhangurl import zizhuji_jiezhangAPI
 from api.zizhuji.danjuAPI import danjuAPI
 from api.yibaofuzhu.yibaofuzhuAPI import yibaofuzhuAPI
 from api.shoufei.gaolingbuzhuAPI import gaolingbuzhuAPI
+from api.yibaofuzhu.zifeibingrenshangchuangAPI import menzhenZiFeiBingRenAPI
 
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    # allow_origins=["http://127.0.0.1:16888", "http://localhost:16888"],  
+    allow_origins=["*"], # 开发环境
+    # allow_origins=["http://127.0.0.1:16888", "http://localhost:16888"],  # 生产环境
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,6 +32,7 @@ app.include_router(danjuAPI,tags=["自助机单据"])
 
 app.include_router(yibaofuzhuAPI,tags=["医保辅助"])
 app.include_router(gaolingbuzhuAPI,tags=["高龄补助"])
+app.include_router(menzhenZiFeiBingRenAPI,tags=["自费病人信息上传"])
 
 
 @app.get("/")

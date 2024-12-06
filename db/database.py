@@ -20,3 +20,14 @@ def get_JieZhang_connection():
                        ,autocommit=True
                        )
     return conn
+
+
+def execute_query(sql:str, parameter):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(sql,parameter)
+    rows = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    cursor.close()
+    conn.close()
+    return rows,columns

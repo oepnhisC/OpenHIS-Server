@@ -26,7 +26,7 @@ log_config = {
     },
 }
 
-logging.config.dictConfig(log_config)
+# logging.config.dictConfig(log_config)
 logging.getLogger("watchfiles.main").setLevel(logging.ERROR)  # 忽略watchfiles的日志
 
 logger = logging.getLogger(__name__)

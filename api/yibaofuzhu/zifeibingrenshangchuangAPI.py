@@ -467,7 +467,7 @@ def uploadOneZhuYuan(request: Request, jiezhangid: JieZhangID):
 @menzhenZiFeiBingRenAPI.post("/getYiBaoMingXi")
 def getYiBaoMingXi(request: Request, jiezhangid: JieZhangID):
     """
-    获取医保明细信息
+    获取已上传医保的明细信息
     """
     print(jiezhangid)
     responJson={}
@@ -482,6 +482,37 @@ def getYiBaoMingXi(request: Request, jiezhangid: JieZhangID):
         'page_size':1000
     }
     requestURL,postdata,posthead = create_request_Data('4207',requestjson)
+    response = requests.post(requestURL,data=postdata,headers=posthead)
+    outputdata = json.loads(response.text)
+    if outputdata :
+        if outputdata['infcode'] == 0:
+            output = outputdata['output']
+            responJson = {'code':0,'result':output}
+        else :
+            responJson = {'code':outputdata['infcode'],'result':outputdata['err_msg']}
+    return  responJson
+
+
+
+
+@menzhenZiFeiBingRenAPI.post("/getZhenDuanXinXi")
+def getZhenDuanXinXi(request: Request, jiezhangid: JieZhangID):
+    """
+    获取已上传医保的诊断信息
+    """
+    print(jiezhangid)
+    responJson={}
+    if not jiezhangid.id:
+        responJson = {'code':2,'result':'结账ID不能为空'}
+        return  responJson
+    
+    requestjson = {
+        'fixmedins_mdtrt_id':jiezhangid.id,
+        'fixmedins_code':hospitalID,
+        'page_num':1,
+        'page_size':1000
+    }
+    requestURL,postdata,posthead = create_request_Data('4209',requestjson)
     response = requests.post(requestURL,data=postdata,headers=posthead)
     outputdata = json.loads(response.text)
     print(outputdata)

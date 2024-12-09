@@ -31,3 +31,14 @@ def execute_query(sql:str, parameter):
     cursor.close()
     conn.close()
     return rows,columns
+
+
+
+def commit_query(sql:str, parameter):
+    conn = get_connection()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(sql,parameter)
+    conn.commit()
+    cursor.close()
+    conn.close()

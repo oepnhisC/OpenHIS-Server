@@ -10,10 +10,12 @@ from api.zizhuji.danjuAPI import danjuAPI
 from api.yibaofuzhu.yibaofuzhuAPI import yibaofuzhuAPI
 from api.shoufei.gaolingbuzhuAPI import gaolingbuzhuAPI
 from api.yibaofuzhu.zifeibingrenshangchuangAPI import menzhenZiFeiBingRenAPI
-
+from myMiddleware.AuthMiddleware import AuthMiddleware
+from api.user.userAPI import userAPI
+from api.user.userManagerAPI import userManagerAPI
 
 app = FastAPI()
-
+app.add_middleware(AuthMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # 开发环境
@@ -22,6 +24,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 app.include_router(guahaoAPI,tags=["挂号"])
 app.include_router(menzhenAPI,tags=["门诊"])
@@ -33,7 +37,8 @@ app.include_router(danjuAPI,tags=["自助机单据"])
 app.include_router(yibaofuzhuAPI,tags=["医保辅助"])
 app.include_router(gaolingbuzhuAPI,tags=["高龄补助"])
 app.include_router(menzhenZiFeiBingRenAPI,tags=["自费病人信息上传"])
-
+app.include_router(userAPI,tags=["用户"])
+app.include_router(userManagerAPI,tags=["用户管理"])
 
 @app.get("/")
 async def root():

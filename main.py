@@ -12,10 +12,12 @@ from api.shoufei.gaolingbuzhuAPI import gaolingbuzhuAPI
 from api.yibaofuzhu.zifeibingrenshangchuangAPI import menzhenZiFeiBingRenAPI
 from myMiddleware.AuthMiddleware import AuthMiddleware
 from api.user.userAPI import userAPI
-from api.user.userManagerAPI import userManagerAPI
+from api.manager.userManagerAPI import userManagerAPI
+from api.zhuyuan.ruyuanAPI import ruyuanAPI
+from api.manager.permissionManagerAPI import permissionManagerAPI
 
 app = FastAPI()
-app.add_middleware(AuthMiddleware)
+# app.add_middleware(AuthMiddleware) # 启用JWT验证中间件
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # 开发环境
@@ -39,6 +41,8 @@ app.include_router(gaolingbuzhuAPI,tags=["高龄补助"])
 app.include_router(menzhenZiFeiBingRenAPI,tags=["自费病人信息上传"])
 app.include_router(userAPI,tags=["用户"])
 app.include_router(userManagerAPI,tags=["用户管理"])
+app.include_router(ruyuanAPI,tags=["病人入院管理"])
+app.include_router(permissionManagerAPI,tags=["权限管理"])
 
 @app.get("/")
 async def root():

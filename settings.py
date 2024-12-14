@@ -15,3 +15,8 @@ dbIP = '127.0.0.1'
 dbName = 'openhis'
 dbUser = 'openhis'
 dbPassword = 'openhis'
+
+
+jwtSECRET_KEY='abc123'
+ALGORITHM='HS256'
+ACCESS_TOKEN_EXPIRE_MINUTES=60*24

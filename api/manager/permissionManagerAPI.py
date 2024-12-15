@@ -7,14 +7,34 @@ from db.sql.manager.permissionManagerSQL import *
 
 permissionManagerAPI = APIRouter(prefix="/permissionManger", tags=["权限管理"])
 
+class Permission(BaseModel):
+    url:str
+    name:str
 
 @permissionManagerAPI.post("/addPermission")
-async def addPermission(request:Request):
-
+async def addPermission(request:Request,permission:Permission):
+    '''
+    添加权限
+    '''
+    if not permission.name or not permission.url:
+        responJson = {'code':1,'result':'参数不能为空'}
+        return responJson
+    
+    rows, columns = execute_query(selectOnePermissionSQL,(permission.url))
+    if len(rows) > 0:
+        responJson = {'code':1,'result':'权限已存在'}
+        return responJson
 
     
 
-    responJson = {'code':1,'result':'添加成功'}
+    try:
+        commit_query(addPermissionSQL,(permission.name,permission.url))
+    except Exception as e:
+        print(e)
+        responJson = {'code':2,'result':'操作失败'}
+        return responJson
+    
+    responJson = {'code':0,'result':'添加成功'}
     return responJson
 
 
@@ -34,7 +54,6 @@ async def getAllAPI(request:Request):
     responJson = { 'code':0,'result':allapi }
 
     return responJson
-
 
 
 

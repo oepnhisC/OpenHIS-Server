@@ -17,8 +17,10 @@ class JieZhangID(BaseModel):
 
 @shoufeiAPI.post("/jiezhangdanju")
 async def jiezhangdanju(request: Request,shijian: ShiJian):
+    '''
+    门诊结账单据查询
+    '''
 
-    print(shijian.dict())
     if not shijian.begintime or not shijian.endtime:
         responJson = {'code':1,'result':'时间不能为空'}
         return  responJson
@@ -46,7 +48,9 @@ async def jiezhangdanju(request: Request,shijian: ShiJian):
 
 @shoufeiAPI.post("/jiezhangmingxi")
 def jiezhangmingxi(request: Request,jiezhangid: JieZhangID):
-    print(jiezhangid.dict())
+    '''
+    门诊结账明细查询
+    '''
     if not jiezhangid.jiezhangID:
         responJson = {'code':1,'result':'ID不能为空'}
         return  responJson

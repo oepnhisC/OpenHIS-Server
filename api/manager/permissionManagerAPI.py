@@ -20,6 +20,10 @@ class RolePermission(BaseModel):
     RoleID:str
     PermissionID:str
 
+
+class RoleId(BaseModel):
+    id:str
+
 @permissionManagerAPI.post("/addPermission")
 async def addPermission(request:Request,permission:Permission):
     '''
@@ -136,12 +140,12 @@ async def addPermissionToRole(request:Request,rolePermission:RolePermission):
         responJson = {'code':1,'result':'参数不能为空'}
         return responJson
     
-    rows, columns = execute_query(selectOnePermissionByIdSQL,(rolePermission.RoleID))
+    rows, columns = execute_query(selectOnePermissionByIdSQL,(rolePermission.PermissionID))
     if len(rows) == 0:
         responJson = {'code':1,'result':'权限不存在'}
         return responJson
 
-    rows, columns = execute_query(selectOneRoleByIdSQL,(rolePermission.PermissionID))
+    rows, columns = execute_query(selectOneRoleByIdSQL,(rolePermission.RoleID))
     if len(rows) == 0:
         responJson = {'code':1,'result':'角色不存在'}
         return responJson
@@ -161,3 +165,24 @@ async def addPermissionToRole(request:Request,rolePermission:RolePermission):
     
     responJson = {'code':0,'result':'添加成功'}
     return responJson
+
+
+
+@permissionManagerAPI.post('/getRolesPermission')
+async def getRolesPermission(request:Request,roleID:RoleId):
+    '''
+    获取角色权限
+    '''
+    if not roleID.id:
+        responJson = {'code':1,'result':'参数不能为空'}
+        return responJson
+    
+    rows, columns = execute_query(selectRolesPermissionSQL,(roleID.id))
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'没有查到数据'}
+        return responJson
+
+    data = [dict(zip(columns, row)) for row in rows]
+    responJson = {'code':0,'result':data}
+    return responJson
+

@@ -45,7 +45,13 @@ async def login(request: Request, user: User):
 
     # 登录成功，生成token
     token = jwt.encode(playload,jwtSECRET_KEY, algorithm=ALGORITHM)
-    responJson = { 'code':0,'result':token }
+
+
+    rows,columns = execute_query(getUserPermissionSQL,(user.username,))
+    
+    data = [dict(zip(columns, row)) for row in rows]
+
+    responJson = { 'code':0,'result':token ,'permission':data}
     return responJson
         
     

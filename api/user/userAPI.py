@@ -29,6 +29,7 @@ async def login(request: Request, user: User):
     
     data = [dict(zip(columns, row)) for row in rows]
     PasswordHash = data[0]['PasswordHash']
+    fname = data[0]['fname']
     if not verify_password(user.password, PasswordHash):
         responJson = {'code':2,'result':'用户或密码错误'}
         return responJson
@@ -46,12 +47,51 @@ async def login(request: Request, user: User):
     # 登录成功，生成token
     token = jwt.encode(playload,jwtSECRET_KEY, algorithm=ALGORITHM)
 
-
     rows,columns = execute_query(getUserPermissionSQL,(user.username,))
-    
+    request.app.state.permissions = rows
     data = [dict(zip(columns, row)) for row in rows]
 
-    responJson = { 'code':0,'result':token ,'permission':data}
+    responJson = { 'code':0,'result':token ,'permission':data ,'fname':fname ,'ip':request.client.host }
     return responJson
         
+
+@userAPI.post('/logout')
+async def logout(request: Request):
+    '''
+    退出登录
+    '''
+    request.app.state.username = None
+    return {'code':0,'result':'退出登录成功'}
+
+
+class ChangePassword(BaseModel):
+    oldPassword: str
+    newPassword: str
+
+
+@userAPI.post('/changePassword')
+async def changePassword(request: Request, password: ChangePassword):
+    '''
+    修改密码
+    '''
+    if not password.oldPassword or not password.newPassword:
+        return {'code':2,'result':'用户名或密码不能为空'}
     
+    if request.app.state.username is None:
+        return {'code':2,'result':'请先登录'}
+    
+    username = request.app.state.username
+    rows,columns = execute_query(getUserSQL,(username,))
+    
+    data = [dict(zip(columns, row)) for row in rows]
+    PasswordHash = data[0]['PasswordHash']
+    if not verify_password(password.oldPassword , PasswordHash):
+        return {'code':2,'result':'原密码错误'}
+    
+    newPasswordHash = hash_password(password.newPassword)
+    try:
+        execute_query(updatePasswordSQL,(newPasswordHash,username))
+    except Exception as e:
+        print(e)
+        return {'code':2,'result':'修改密码失败'}
+    return {'code':0,'result':'密码修改成功'}

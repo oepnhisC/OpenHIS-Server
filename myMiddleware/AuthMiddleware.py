@@ -6,7 +6,7 @@ from settings import jwtSECRET_KEY,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import datetime
 
 # 排除列表
-excluded_paths = ["/user/login",'/userManger/addUser','/docs','/openapi.json']
+excluded_paths = ["/user/login",'/user/logout','/userManger/addUser','/docs','/openapi.json']
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -31,17 +31,18 @@ class AuthMiddleware(BaseHTTPMiddleware):
             now = datetime.now()  # 获取当前时间
             print(exp,now)
             if now > datetime.fromtimestamp(exp):  # 判断 token 是否过期
-                return resp
-            # else:
-            #     #判断剩余时间,小于8分钟更新token
-            #     remaining_time = exp - int(datetime.now().timestamp())
-            #     if remaining_time < 480:
-            #         new_token = jwt.encode({'username':payload['username'],'ip':request.client.host},jwtSECRET_KEY,algorithm=ALGORITHM)
-            #         response = JSONResponse(content={'code':0,'result':new_token})
-            if(request.app.state.username == payload['username'] and 
-            request.client.host == payload['ip']):
-                return await call_next(request)
-        except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+                return JSONResponse(content= {'code':998,'result':'授权已过期，请重新登录'})
+
+            # 验证 token 有效性
+            if(request.app.state.username == payload['username'] and  request.client.host == payload['ip']):
+                # 验证接口权限
+                permissions = request.app.state.permissions
+                if request.url.path in permissions:
+                    return await call_next(request)
+                else:
+                    return JSONResponse(content= {'code':997,'result':'没有该接口权限'})
+        except Exception as e:
+            print(e)
             return resp
 
         return resp

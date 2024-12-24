@@ -1,5 +1,5 @@
 from fastapi import APIRouter,Request
-from db.database import get_connection,execute_query
+from db.database import commit_query,execute_query
 from pydantic import BaseModel
 from db.sql.user.userSQL import *
 import jwt
@@ -90,7 +90,7 @@ async def changePassword(request: Request, password: ChangePassword):
     
     newPasswordHash = hash_password(password.newPassword)
     try:
-        execute_query(updatePasswordSQL,(newPasswordHash,username))
+        commit_query(updatePasswordSQL,(newPasswordHash,username))
     except Exception as e:
         print(e)
         return {'code':2,'result':'修改密码失败'}

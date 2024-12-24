@@ -6,3 +6,6 @@ python（FastAPI框架）写的HIS（医院信息系统）后台
 应该配合我写的另外两个项目使用  
 [自助终端](https://github.com/oepnhisC/OpenHIS-ZZJ)  
 [OpenHis前端](https://github.com/oepnhisC/OpenHis-Web)
+
+数据库脚本需要自行编写  
+表结构需要自行设计

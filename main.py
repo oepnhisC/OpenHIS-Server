@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from api.guahao.urls import guahaoAPI
-from api.menzhen.urls import menzhenAPI
+from api.menzhen.menzhenAPI import menzhenAPI
 from api.shoufei.urls import shoufeiAPI
 from api.zizhuji.urls import zizhujiAPI
 from api.zizhuji.jiezhangurl import zizhuji_jiezhangAPI

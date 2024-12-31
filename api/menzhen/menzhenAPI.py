@@ -20,3 +20,21 @@ async def getHouZhenList(request:Request):
         responJson = { 'code':0,'result':data }
 
     return responJson
+
+
+@menzhenAPI.post('/getJiuZhenList')
+async def getJiuZhenList(request:Request):
+    '''
+    获取就诊列表
+    '''
+    responJson = {}
+    rows, columns = execute_query(getJiuZhenListSQL,())
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+
+    return responJson
+

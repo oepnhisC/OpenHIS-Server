@@ -26,7 +26,11 @@ log_config = {
     },
 }
 
-# logging.config.dictConfig(log_config)
+# 正式环境
+# logging.config.dictConfig(log_config)  
+
+# 开发环境
+logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(name)s  - %(levelname)s - %(message)s')
 logging.getLogger("watchfiles.main").setLevel(logging.ERROR)  # 忽略watchfiles的日志
 
 logger = logging.getLogger(__name__)

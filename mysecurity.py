@@ -2,6 +2,9 @@
 
 from passlib.context import CryptContext
 
+#加入这句打包才不会报错
+from passlib.handlers.bcrypt import bcrypt
+
 # 创建 CryptContext 实例
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

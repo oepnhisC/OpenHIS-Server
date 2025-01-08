@@ -1,11 +1,12 @@
 from fastapi import APIRouter,Request
 from yibao.info import * 
-from db.database import get_connection
 from pydantic import BaseModel
 import requests
 from settings import mdtrtarea_admvs
 from time import time
-from mylogging import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 yibaofuzhuAPI = APIRouter(prefix="/yibaofuzhu", tags=["医保辅助功能"])
 
@@ -23,6 +24,7 @@ class PersonInfoData(BaseModel):
 
 class RenYuanBianHao(BaseModel):
     psn_no:str = ""
+    insuplc_admdvs :str = mdtrtarea_admvs
 
 @yibaofuzhuAPI.post("/personInfo")
 async def get_yibao_info(request: Request,personInfoData:PersonInfoData):
@@ -36,8 +38,8 @@ async def get_yibao_info(request: Request,personInfoData:PersonInfoData):
         last_time = request.app.state.request_time
 
     current_time = time()
-    if (current_time - last_time < 38):
-        remaining_time = 38 - (current_time - last_time)
+    if (current_time - last_time < 28):
+        remaining_time = 28 - (current_time - last_time)
         remaining_time = round(remaining_time, 2)
         return {'code':120,'result':f'请求频率过高，请{remaining_time}秒后再试'}
 
@@ -87,7 +89,7 @@ async def getJiaoFeiInfo(request: Request,renYuanBianHao:RenYuanBianHao):
         }
     }
     
-    requestURL,postdata,posthead = create_request_Data('90100',requestjson)
+    requestURL,postdata,posthead = create_request_Data('90100',requestjson,renYuanBianHao.insuplc_admdvs)
     response = requests.post(requestURL,data=postdata,headers=posthead)
     outputdata = json.loads(response.text)
 
@@ -118,7 +120,7 @@ async def getManBingInfo(request: Request,renYuanBianHao:RenYuanBianHao):
         }
     }
     
-    requestURL,postdata,posthead = create_request_Data('5301',requestjson)
+    requestURL,postdata,posthead = create_request_Data('5301',requestjson,renYuanBianHao.insuplc_admdvs)
     response = requests.post(requestURL,data=postdata,headers=posthead)
     outputdata = json.loads(response.text)
 
@@ -150,7 +152,7 @@ async def getDingDianInfo(request: Request,renYuanBianHao:RenYuanBianHao):
         }
     }
     
-    requestURL,postdata,posthead = create_request_Data('5302',requestjson)
+    requestURL,postdata,posthead = create_request_Data('5302',requestjson,renYuanBianHao.insuplc_admdvs)
     response = requests.post(requestURL,data=postdata,headers=posthead)
     outputdata = json.loads(response.text)
 

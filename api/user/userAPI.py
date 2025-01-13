@@ -6,7 +6,9 @@ import jwt
 from settings import jwtSECRET_KEY,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES
 from mysecurity import hash_password,verify_password
 from datetime import datetime, timedelta
+import logging
 
+logger = logging.getLogger(__name__)
 
 userAPI = APIRouter(prefix="/user", tags=["用户"])
 
@@ -30,6 +32,7 @@ async def login(request: Request, user: User):
     data = [dict(zip(columns, row)) for row in rows]
     PasswordHash = data[0]['PasswordHash']
     fname = data[0]['fname']
+    fryid = str(data[0]['fryid'])
     if not verify_password(user.password, PasswordHash):
         responJson = {'code':2,'result':'用户或密码错误'}
         return responJson
@@ -41,6 +44,7 @@ async def login(request: Request, user: User):
     }
 
     request.app.state.username = user.username
+    request.app.state.fryid = fryid
     print('ip:',request.client.host,'username:',user.username,'登录成功')
     print('exp:',playload['exp'])
 
@@ -50,7 +54,7 @@ async def login(request: Request, user: User):
     rows,columns = execute_query(getUserPermissionSQL,(user.username,))
     request.app.state.permissions = rows
     data = [dict(zip(columns, row)) for row in rows]
-
+    logger.info('登录成功,姓名:'+fname+',ID:'+fryid+',IP:'+request.client.host)
     responJson = { 'code':0,'result':token ,'permission':data ,'fname':fname ,'ip':request.client.host }
     return responJson
         

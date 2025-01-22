@@ -29,10 +29,14 @@ async def login(request: Request, user: User):
         responJson = {'code':2,'result':'用户或密码错误'}
         return  responJson
     
+
+
     data = [dict(zip(columns, row)) for row in rows]
     PasswordHash = data[0]['PasswordHash']
     fname = data[0]['fname']
     fryid = str(data[0]['fryid'])
+    fksid = str(data[0]['fksid'])
+    fks = data[0]['fks']
     if not verify_password(user.password, PasswordHash):
         responJson = {'code':2,'result':'用户或密码错误'}
         return responJson
@@ -45,6 +49,7 @@ async def login(request: Request, user: User):
 
     request.app.state.username = user.username
     request.app.state.fryid = fryid
+    request.app.state.fksid = fksid
     print('ip:',request.client.host,'username:',user.username,'登录成功')
     print('exp:',playload['exp'])
 
@@ -53,9 +58,10 @@ async def login(request: Request, user: User):
 
     rows,columns = execute_query(getUserPermissionSQL,(user.username,))
     request.app.state.permissions = rows
-    data = [dict(zip(columns, row)) for row in rows]
+    permissions = [dict(zip(columns, row)) for row in rows]
+
     logger.info('登录成功,姓名:'+fname+',ID:'+fryid+',IP:'+request.client.host)
-    responJson = { 'code':0,'result':token ,'permission':data ,'fname':fname ,'ip':request.client.host }
+    responJson = { 'code':0,'result':token ,'permission':permissions ,'fname':fname ,'ip':request.client.host,'fks':fks,'fksid':fksid }
     return responJson
         
 
@@ -99,3 +105,4 @@ async def changePassword(request: Request, password: ChangePassword):
         print(e)
         return {'code':2,'result':'修改密码失败'}
     return {'code':0,'result':'密码修改成功'}
+

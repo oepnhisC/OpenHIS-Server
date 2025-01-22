@@ -33,6 +33,9 @@ async def getJiuZhenList(request:Request):
     '''
     获取就诊列表
     '''
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    fryid = request.app.state.fryid
     responJson = {}
     rows, columns = execute_query(getJiuZhenListSQL,())
     if len(rows) == 0:
@@ -95,3 +98,47 @@ def chaXunBingRen(request:Request,chaxunBingRen:ChaXunBingRen):
         responJson = { 'code':0,'result':data }
 
     return responJson
+
+
+
+@menzhenAPI.post('/getBingRenXinXi')
+async def getBingRenXinXi(request:Request,jiuzhen:JiuZhenXinXi):
+    '''
+    获取病人详细信息
+    '''
+    responJson = {}
+    if not jiuzhen.jzid:
+        return {'code':2,'result':'无就诊ID'}
+    rows, columns = execute_query(getBingRenXinXiSQL,(jiuzhen.jzid,jiuzhen.jzid))
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+
+    return responJson
+
+
+
+@menzhenAPI.get('/getKeShi')
+async def getKeShi(request:Request):
+    '''
+    获取科室信息
+    '''
+    responJson = {}
+    
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    fryid = request.app.state.fryid
+
+    rows, columns = execute_query(getKeShiSQL,(fryid,))
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+
+    return responJson
+

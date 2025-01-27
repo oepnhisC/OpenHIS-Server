@@ -50,6 +50,7 @@ async def login(request: Request, user: User):
     request.app.state.username = user.username
     request.app.state.fryid = fryid
     request.app.state.fksid = fksid
+    request.app.state.fname = fname
     print('ip:',request.client.host,'username:',user.username,'登录成功')
     print('exp:',playload['exp'])
 

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+import mylogging
 from api.guahao.urls import guahaoAPI
 from api.menzhen.menzhenAPI import menzhenAPI
 from api.shoufei.urls import shoufeiAPI
@@ -16,6 +17,8 @@ from api.manager.userManagerAPI import userManagerAPI
 from api.zhuyuan.ruyuanAPI import ruyuanAPI
 from api.manager.permissionManagerAPI import permissionManagerAPI
 from api.gonggong.gonggongAPI import gonggongAPI
+from api.menzhen.menzhenYiZhuAPI import menzhenYiZhuAPI
+
 
 app = FastAPI()
 # app.add_middleware(AuthMiddleware) # 启用JWT验证中间件
@@ -45,6 +48,7 @@ app.include_router(userManagerAPI,tags=["用户管理"])
 app.include_router(ruyuanAPI,tags=["病人入院管理"])
 app.include_router(permissionManagerAPI,tags=["权限管理"])
 app.include_router(gonggongAPI,tags=["公共模块"])
+app.include_router(menzhenYiZhuAPI,tags=["门诊医嘱"])
 
 
 @app.get("/")

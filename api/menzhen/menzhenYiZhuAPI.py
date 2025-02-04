@@ -21,7 +21,11 @@ async def getICD10Code(request:Request,searchContent:SearchContent):
     获取ICD10编码
     '''
     responJson = {}
-    rows, columns = execute_query(getICD10CodeSQL,(searchContent.content,searchContent.content,searchContent.content))
+    if searchContent.content == '':
+        responJson = {'code':1,'result':'请输入搜索内容'}
+        return  responJson
+    content = '%' + searchContent.content + '%'
+    rows, columns = execute_query(getICD10CodeSQL,(content,content,content))
     if len(rows) == 0:
         responJson = {'code':1,'result':'未查询到相关信息'}
         return  responJson

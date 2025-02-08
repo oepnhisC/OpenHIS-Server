@@ -65,3 +65,85 @@ async def getYiZhuContent(request:Request,searchContent:SearchContent):
         responJson = { 'code':0,'result':data }
 
     return responJson
+
+
+
+@menzhenYiZhuAPI.get("/getGeiYaoTuJing")
+async def getGeiYaoTuJing(request:Request):
+    '''
+    获取给药途径
+    '''
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    fryid = request.app.state.fryid
+    rows, columns = execute_query(getGeiYaoTuJingSQL,(fryid,))
+    if len(rows) == 0:
+        return {'code':1,'result':'未查询到相关信息'}
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        return { 'code':0,'result':data }
+    
+@menzhenYiZhuAPI.get("/getPinci")
+async def getPinci(request:Request):
+    '''
+    获取频次
+    '''
+    rows, columns = execute_query(getPinciSQL,())
+    if len(rows) == 0:
+        return {'code':1,'result':'未查询到相关信息'}
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        return { 'code':0,'result':data }
+    
+
+@menzhenYiZhuAPI.get('/getYongYaoMuDi')
+async def getYongYaoMuDi(request:Request):
+    '''
+    获取用药目的
+    '''
+    rows, columns = execute_query(getYongYaoMuDiSQL,())
+    if len(rows) == 0:
+        return {'code':1,'result':'未查询到相关信息'}
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        return { 'code':0,'result':data }
+    
+
+@menzhenYiZhuAPI.get('/getYiZhuBeiZhu')
+async def getYiZhuBeiZhu(request:Request):
+    '''
+    获取医嘱备注
+    '''
+    rows, columns = execute_query(getYiZhuBeiZhuSQL,())
+    if len(rows) == 0:
+        return {'code':1,'result':'未查询到相关信息'}
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        return { 'code':0,'result':data }
+    
+
+@menzhenYiZhuAPI.get('/getZhiXingKeShi')
+async def getZhiXingKeShi(request:Request):
+    '''
+    获取执行科室
+    '''
+    rows, columns = execute_query(getZhiXingKeShiSQL,())
+    if len(rows) == 0:
+        return {'code':1,'result':'未查询到相关信息'}
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        return { 'code':0,'result':data }
+    
+
+
+@menzhenYiZhuAPI.get('/getGeiYaoZhiXingKeShi')
+async def getGeiYaoZhiXingKeShi(request:Request):
+    '''
+    获取给药执行科室
+    '''
+    rows, columns = execute_query(getGeiYaoZhiXingKeShiSQL,())
+    if len(rows) == 0:
+        return {'code':1,'result':'未查询到相关信息'}
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        return { 'code':0,'result':data }

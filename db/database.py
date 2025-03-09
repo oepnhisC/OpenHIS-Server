@@ -21,6 +21,21 @@ def get_JieZhang_connection():
                        )
     return conn
 
+def get_mssql_connection():
+    conn = pymssql.connect(server=dbIP, user=dbUser, password=dbPassword
+                       , database=dbName
+                       ,charset='utf8'
+                       ,autocommit=True
+                       )
+    return conn
+
+def get_mssql_connection_cp936():
+    conn = pymssql.connect(server=dbIP, user=dbUser, password=dbPassword
+                       , database=dbName
+                       ,charset='cp936'
+                       ,autocommit=True
+                       )
+    return conn
 
 def execute_query(sql:str, parameter):
     conn = get_connection()
@@ -35,7 +50,6 @@ def execute_query(sql:str, parameter):
 
 
 def commit_query(sql:str, parameter):
-    conn = get_connection()
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(sql,parameter)

@@ -31,19 +31,12 @@ async def get_yibao_info(request: Request,personInfoData:PersonInfoData):
     """
     获取参保人信息
     """
-    logger.info('get_yibao_info')
-    logger.info(personInfoData)
-    last_time = 0
-    if hasattr(request.app.state,'request_time'):
-        last_time = request.app.state.request_time
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    fryid = request.app.state.fryid
+    fryno = request.app.state.username
+    fname = request.app.state.fname
 
-    current_time = time()
-    if (current_time - last_time < 28):
-        remaining_time = 28 - (current_time - last_time)
-        remaining_time = round(remaining_time, 2)
-        return {'code':120,'result':f'请求频率过高，请{remaining_time}秒后再试'}
-
-    request.app.state.request_time = current_time
 
     requestjson = {
         "data": {
@@ -57,13 +50,12 @@ async def get_yibao_info(request: Request,personInfoData:PersonInfoData):
         }
     }
     
-    requestURL,postdata,posthead = create_request_Data('1101',requestjson,personInfoData.insuplc_admdvs)
-    logger.info('1101入参')
-    logger.info(postdata)
-    response = requests.post(requestURL,data=postdata,headers=posthead)
+    requestURL,postdata,posthead = create_request_Data('1101',requestjson,personInfoData.insuplc_admdvs,opter=fryno,opter_name=fname)
+    logger.info(f'用户:{fname}，1101入参:{postdata}')
+    response = requests.post(requestURL,data=postdata.encode('utf-8'),headers=posthead)
     outputdata = json.loads(response.text)
-    logger.info('1101出参')
-    logger.info(outputdata)
+    logger.info(f'用户:{fname}，1101出参:{outputdata}')
+    
     responJson = {'code':1,'result':'失败'}
 
     if outputdata :
@@ -82,15 +74,20 @@ async def getJiaoFeiInfo(request: Request,renYuanBianHao:RenYuanBianHao):
     """
     获取缴费信息
     """
-    
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    fryid = request.app.state.fryid
+    fryno = request.app.state.username
+    fname = request.app.state.fname
+
     requestjson = {
         "data": {
             "psn_no": renYuanBianHao.psn_no,
         }
     }
     
-    requestURL,postdata,posthead = create_request_Data('90100',requestjson,renYuanBianHao.insuplc_admdvs)
-    response = requests.post(requestURL,data=postdata,headers=posthead)
+    requestURL,postdata,posthead = create_request_Data('90100',requestjson,renYuanBianHao.insuplc_admdvs,opter=fryno,opter_name=fname)
+    response = requests.post(requestURL,data=postdata.encode('utf-8'),headers=posthead)
     outputdata = json.loads(response.text)
 
     responJson = {'code':1,'result':'失败'}
@@ -114,14 +111,21 @@ async def getManBingInfo(request: Request,renYuanBianHao:RenYuanBianHao):
     """
     获取慢特病信息
     """
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    fryid = request.app.state.fryid
+    fryno = request.app.state.username
+    fname = request.app.state.fname
+
+
     requestjson = {
         "data": {
             "psn_no": renYuanBianHao.psn_no,
         }
     }
     
-    requestURL,postdata,posthead = create_request_Data('5301',requestjson,renYuanBianHao.insuplc_admdvs)
-    response = requests.post(requestURL,data=postdata,headers=posthead)
+    requestURL,postdata,posthead = create_request_Data('5301',requestjson,renYuanBianHao.insuplc_admdvs,opter=fryno,opter_name=fname)
+    response = requests.post(requestURL,data=postdata.encode('utf-8'),headers=posthead)
     outputdata = json.loads(response.text)
 
     responJson = {'code':1,'result':'失败'}
@@ -145,6 +149,12 @@ async def getDingDianInfo(request: Request,renYuanBianHao:RenYuanBianHao):
     """
     获取定点信息
     """
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    fryid = request.app.state.fryid
+    fryno = request.app.state.username
+    fname = request.app.state.fname
+    
     requestjson = {
         "data": {
             "psn_no": renYuanBianHao.psn_no,
@@ -152,8 +162,8 @@ async def getDingDianInfo(request: Request,renYuanBianHao:RenYuanBianHao):
         }
     }
     
-    requestURL,postdata,posthead = create_request_Data('5302',requestjson,renYuanBianHao.insuplc_admdvs)
-    response = requests.post(requestURL,data=postdata,headers=posthead)
+    requestURL,postdata,posthead = create_request_Data('5302',requestjson,renYuanBianHao.insuplc_admdvs,opter=fryno,opter_name=fname)
+    response = requests.post(requestURL,data=postdata.encode('utf-8'),headers=posthead)
     outputdata = json.loads(response.text)
 
     responJson = {'code':1,'result':'失败'}

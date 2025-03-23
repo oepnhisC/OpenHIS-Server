@@ -29,8 +29,6 @@ async def login(request: Request, user: User):
         responJson = {'code':2,'result':'用户或密码错误'}
         return  responJson
     
-
-
     data = [dict(zip(columns, row)) for row in rows]
     PasswordHash = data[0]['PasswordHash']
     fname = data[0]['fname']
@@ -51,14 +49,12 @@ async def login(request: Request, user: User):
     request.app.state.fryid = fryid
     request.app.state.fksid = fksid
     request.app.state.fname = fname
-    print('ip:',request.client.host,'username:',user.username,'登录成功')
-    print('exp:',playload['exp'])
 
     # 登录成功，生成token
     token = jwt.encode(playload,jwtSECRET_KEY, algorithm=ALGORITHM)
 
     rows,columns = execute_query(getUserPermissionSQL,(user.username,))
-    request.app.state.permissions = rows
+    request.app.state.permissions = [item[0] for item in rows]
     permissions = [dict(zip(columns, row)) for row in rows]
 
     logger.info('登录成功,姓名:'+fname+',ID:'+fryid+',IP:'+request.client.host)
@@ -72,6 +68,10 @@ async def logout(request: Request):
     退出登录
     '''
     request.app.state.username = None
+    request.app.state.fryid = None
+    request.app.state.fksid = None
+    request.app.state.fname = None
+    request.app.state.permissions = []
     return {'code':0,'result':'退出登录成功'}
 
 
@@ -106,4 +106,5 @@ async def changePassword(request: Request, password: ChangePassword):
         print(e)
         return {'code':2,'result':'修改密码失败'}
     return {'code':0,'result':'密码修改成功'}
+
 

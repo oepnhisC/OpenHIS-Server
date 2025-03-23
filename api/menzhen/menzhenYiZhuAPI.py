@@ -239,7 +239,7 @@ class ZhenDuan(BaseModel):
     xyzy:str = '0' #西医或中医
     zdlx:str = '1' #诊断类型
     jbid:str = '' #疾病ID
-    jKESHIid:str = '0' #疾病参考id
+    jbckid:str = '0' #疾病参考id
     jbname:str = '' #疾病名称
     yizhen:str = '' #疑诊
     zyzh:str = '' #中医证候
@@ -632,3 +632,51 @@ async def queRenYiZhu(request:Request,yizhu:YiZhu):
 
     return responJson
 
+
+
+@menzhenYiZhuAPI.get('/getZhongYaoJiaoZhu')
+async def getZhongYaoJiaoZhu(request:Request):
+    '''
+    获取中药脚注
+    '''
+    responJson = {}
+    rows, columns = execute_query(getZhongYaoJiaoZhuSQL,())
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+
+    return responJson
+
+
+
+
+@menzhenYiZhuAPI.post("/getZhongYaoYiZhu")
+async def getZhongYaoYiZhu(request:Request,searchContent:SearchContent):
+    '''
+    获取中药医嘱内容
+    '''
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    fryid = request.app.state.fryid
+
+    responJson = {}
+    
+    if searchContent.keshiId == '':
+        return {'code':1,'result':'请选择科室'}
+    keshiId = searchContent.keshiId
+    if searchContent.content == '':
+        responJson = {'code':1,'result':'请输入搜索内容'}
+        return  responJson
+    content = '%' + searchContent.content + '%'
+    rows, columns = execute_query(getZhongYaoYiZhuSQL,(content,keshiId,fryid))
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+
+    return responJson

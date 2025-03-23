@@ -3,7 +3,10 @@ from db.database import execute_query,commit_query
 from pydantic import BaseModel
 from mysecurity import hash_password,verify_password
 from db.sql.manager.userManagerSQL import *
+from db.sql.user.userSQL import getUserSQL,updatePasswordSQL
+import logging
 
+logger = logging.getLogger(__name__)
 
 userManagerAPI = APIRouter(prefix="/userManger", tags=["用户管理"])
 
@@ -105,3 +108,31 @@ async def addRoleToUser(request:Request,userrole:UserRole):
     responJson = {'code':0,'result':'角色添加成功'}
     return responJson
 
+
+class UserPassword(BaseModel):
+    username: str
+    password: str
+
+@userManagerAPI.post('/resetPassword')
+async def resetPassword(request: Request,up:UserPassword):
+    '''
+    重置密码
+    '''
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    
+    if  up.password == '' or up.username == '':
+        return {'code':2,'result':'用户名或新密码不能为空'}
+    
+    username = up.username
+    rows,columns = execute_query(getUserSQL,(username,))
+    if len(rows) == 0:
+        return {'code':2,'result':'用户名不存在'}
+
+    newPasswordHash = hash_password(up.password )
+    try:
+        commit_query(updatePasswordSQL,(newPasswordHash,username))
+    except Exception as e:
+        logger.error(e)
+        return {'code':2,'result':'修改密码失败'}
+    return {'code':0,'result':'密码修改成功'}

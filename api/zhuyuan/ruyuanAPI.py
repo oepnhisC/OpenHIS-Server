@@ -1,6 +1,5 @@
 from fastapi import APIRouter,Request
 from pydantic import BaseModel,constr, validator
-from mylogging import logger
 from db.database import get_connection, execute_query
 from db.sql.zhuyuan.ruyuanSQL import ruyuanSQL01 
 from db.sql.zhuyuan.bingzhongSQL import bingzhongSQL01

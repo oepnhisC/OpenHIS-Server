@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 menzhenAPI = APIRouter(prefix="/menzhen",tags=["门诊"])
 
 class JiuZhenXinXi(BaseModel):
-    jzid:str
+    jzid:str  #就诊ID
+    brid:str = '' #病人ID
 
 
 
@@ -260,6 +261,25 @@ async def getOldData(request:Request,searchContent:SearchContent):
     logger.info('开始查询')
     logger.info('查询内容:'+searchContent.content)
     rows, columns = execute_query(getOldDataSQL,(searchContent.content ,searchContent.mzh ,searchContent.content ,searchContent.content,searchContent.content))
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'未查询到相关信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson = { 'code':0,'result':data }
+
+    return responJson
+
+
+@menzhenAPI.post('/getZhenDuan')
+async def getZhenDuan(request:Request,jiuzhen:JiuZhenXinXi):
+    '''
+    获取诊断信息
+    '''
+    responJson = {}
+    if  jiuzhen.jzid == '' or jiuzhen.brid == '':
+        return {'code':2,'result':'无就诊ID或病人ID'}
+    rows, columns = execute_query(getZhenDuanSQL,(jiuzhen.jzid,jiuzhen.brid))
     if len(rows) == 0:
         responJson = {'code':1,'result':'未查询到相关信息'}
         return  responJson

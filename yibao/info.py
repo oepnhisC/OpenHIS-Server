@@ -10,7 +10,7 @@ characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 numbers = "0123456789"
 
 
-def create_request_Data(infno,inputJson,insuplc_admdvs=mdtrtarea_admvs):
+def create_request_Data(infno,inputJson,insuplc_admdvs=mdtrtarea_admvs,opter="13888",opter_name="自助机"):
     requestURL = yibaoUrl + infno
     timestamp = str(int(time.time()))
     nonce = ''.join(random.choice(characters) for _ in range(32))
@@ -32,15 +32,15 @@ def create_request_Data(infno,inputJson,insuplc_admdvs=mdtrtarea_admvs):
             "msgid": msgid,
             "mdtrtarea_admvs": mdtrtarea_admvs,
             "insuplc_admdvs": insuplc_admdvs,
-            "recer_sys_code": "13888",
+            "recer_sys_code": opter,
             "dev_no": "",
             "dev_safe_info": "",
             "cainfo": "",
             "signtype": "",
             "infver": "V1.0",
             "opter_type": "2",
-            "opter": "13888",
-            "opter_name": "自助机",
+            "opter": opter,
+            "opter_name": opter_name,
             "inf_time" : datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             "fixmedins_code": hospitalID,
             "fixmedins_name": hospitalName,
@@ -49,5 +49,5 @@ def create_request_Data(infno,inputJson,insuplc_admdvs=mdtrtarea_admvs):
             "input": inputJson
         }
     
-    requestData = json.dumps(postdata)
+    requestData = json.dumps(postdata,ensure_ascii=False)
     return requestURL,requestData,posthead

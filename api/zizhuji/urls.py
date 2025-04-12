@@ -3,95 +3,49 @@ from yibao.info import *
 from pydantic import BaseModel
 import requests
 import json
-from db.database import get_connection
+from db.database import get_connection,execute_query
 from db.sql.zizhuji.payDetails import payDetailsSql
-from db.sql.zizhuji.danju import danjuSQL,danjumingxiSQL,danjuZongJiaSQL,personInfo_mzhSQL
+from db.sql.zizhuji.danJuSQL import *
 from db.sql.zizhuji.print import printInfoHeaderSQL,zongFeiYongSQL,zhifuFangshiSQL,fapiaoURLSQL,feibieSQL,zhiyindanSQL,yingxiangdanSQL,zhuyaozhenduanSQL,weicaidanSQL,caixiedanSQL,fukedanSQL,jianyandanSQL,fapiaoSQL
 from io import BytesIO
 import fitz  # PyMuPDF
 import base64
+import logging
 
+logger = logging.getLogger(__name__)
 
 zizhujiAPI = APIRouter(prefix="/zizhuji",tags=["自助机"])
 
 class PingZheng(BaseModel):
-    number:str
+    number:str = ''
 
-# 电子医保凭证查询
-@zizhujiAPI.post("/dzybpz")
-def dzybpz(pingzheng:PingZheng):
-    
-    requestjson = {
-        "data": {
-            "mdtrt_cert_type": "01",
-            "mdtrt_cert_no": pingzheng.number,
-            "card_sn": "",
-            "begntime": "",
-            "psn_cert_type": "",
-            "certno": "",
-            "psn_name": ""
-        }
-    }
-    
-    requestURL,postdata,posthead = create_request_Data('1101',requestjson)
-    response = requests.post(requestURL,data=postdata,headers=posthead)
-    outputdata = json.loads(response.text)
-
-    responJson = {'code':1,'result':'失败'}
-
-    if outputdata :
-        if outputdata['infcode'] == 0:
-            print(outputdata['output'])
-            
-            certno =outputdata['output']['baseinfo']['certno']
-            print(certno)
-            conn = get_connection()
-            cursor = conn.cursor()
-            cursor.execute(payDetailsSql, (certno,))
-            rows = cursor.fetchall()
-            columns = [column[0] for column in cursor.description]
-            cursor.close()
-            conn.close()
-            print(rows)
-            if len(rows) == 0:
-                responJson = {'code':1,'result':'未查询到相关信息'}
-            else:
-                data = [dict(zip(columns, row)) for row in rows]
-                responJson = { 'code':0,'result':data }
-        
-        else :
-            print(outputdata['err_msg'])
-            responJson = {'code':outputdata['infcode'],'result':outputdata['err_msg']}
-
-    return  responJson
 
 # 获取人员信息
 @zizhujiAPI.post("/personInfo")
 def personInfo(request: Request,pingzheng:PingZheng):
     shuru = pingzheng.number
-    if (shuru) :
-        if (len(shuru) == 10):
-            print('门诊号',shuru)
-        elif (len(shuru) == 28):
-            print('电子医保凭证',shuru)
-        else:
-            print('非法输入')
+    if (len(shuru)>0) :
+        if (len(shuru) != 10 and len(shuru)!= 28 and not shuru.startswith("https")  ):
             responJson = {'code':1,'result':'非法输入'}
             return  responJson
     else:
-        print('未输入任何信息')
-        responJson = {'code':1,'result':'未输入任何信息'}
+        responJson = {'code':1,'result':'未输入信息'}
         return  responJson
 
-    
+    # 小票二维码
+    if shuru.startswith("https"):
+        last_colon_index = shuru.rfind(":") # 找到最后一个冒号的位置 
+        if last_colon_index != -1:  # 确保存在冒号 
+            result = shuru[last_colon_index + 1:]  # 从冒号后一位开始截取
+            logger.info('扫码结果:'+result) 
+        else:
+            responJson = {'code':1,'result':'非法输入'}
+            return  responJson
+        
+        
+    #门诊号
     if( len(shuru) == 10):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute(personInfo_mzhSQL, (shuru,))
-        rows = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        # print(rows)
+        rows,columns = execute_query(personInfo_mzhSQL, (shuru,))
         if len(rows) == 0:
             responJson = {'code':1,'result':'未查询到相关信息'}
         else:
@@ -120,20 +74,19 @@ def personInfo(request: Request,pingzheng:PingZheng):
         }
         
         requestURL,postdata,posthead = create_request_Data('1101',requestjson)
-        response = requests.post(requestURL,data=postdata,headers=posthead)
+        logger.info(f'用户:自助机，1101入参:{postdata}')
+        response = requests.post(requestURL,data=postdata.encode('utf-8'),headers=posthead)
         outputdata = json.loads(response.text)
-
+        logger.info(f'用户:自助机，1101出参:{outputdata}')
         responJson = {'code':1,'result':'失败'}
 
         if outputdata :
             if outputdata['infcode'] == 0:
-                print(outputdata['output'])
                 certno =outputdata['output']['baseinfo']['certno']
                 responJson = { 'code':0,'result':'成功' }
                 request.app.state.sfz = certno
                 request.app.state.qtzj = ''
             else :
-                print(outputdata['err_msg'])
                 responJson = {'code':outputdata['infcode'],'result':'查询电子医保凭证失败'}
         else:
             responJson = {'code':1,'result':'未知错误'}
@@ -177,34 +130,6 @@ def test(request: Request, pingzheng:PingZheng):
 
 
 
-@zizhujiAPI.get("/danjuInfo")
-def danjuInfo(request: Request):
-    sfz =request.app.state.sfz
-    qtzj =request.app.state.qtzj 
-    if (sfz == '' and qtzj == ''):
-        responJson = {'code':99,'result':'无身份证信息'}
-        return  responJson
-
-    zj = ''
-    if sfz != '':
-        zj = sfz
-    elif qtzj != '':
-        zj = qtzj
-
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(danjuSQL, (zj,zj))
-    rows = cursor.fetchall()
-    columns = [column[0] for column in cursor.description]
-    cursor.close()
-    conn.close()
-    if len(rows) == 0:
-        responJson = {'code':1,'result':'未查询到相关信息'}
-    else:
-        data = [dict(zip(columns, row)) for row in rows]
-        responJson = { 'code':0,'result':data }
-    
-    return  responJson
 
 
 class DanJuMingXi(BaseModel):

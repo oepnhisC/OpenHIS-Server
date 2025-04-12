@@ -19,6 +19,7 @@ from api.manager.permissionManagerAPI import permissionManagerAPI
 from api.gonggong.gonggongAPI import gonggongAPI
 from api.menzhen.menzhenYiZhuAPI import menzhenYiZhuAPI
 from api.yibaofuzhu.shiqianfenxiAPI import shiqianfenxiAPI
+from api.zizhuji.chaXunAPI import chaXunAPI
 
 app = FastAPI()
 # app.add_middleware(AuthMiddleware) # 启用JWT验证中间件
@@ -48,6 +49,8 @@ app.include_router(permissionManagerAPI,tags=["权限管理"])
 app.include_router(gonggongAPI,tags=["公共模块"])
 app.include_router(menzhenYiZhuAPI,tags=["门诊医嘱"])
 app.include_router(shiqianfenxiAPI,tags=["事前分析"])
+app.include_router(chaXunAPI,tags=["自助机查询"])
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}

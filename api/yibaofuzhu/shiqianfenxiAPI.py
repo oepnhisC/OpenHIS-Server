@@ -3,7 +3,6 @@ from yibao.info import *
 from pydantic import BaseModel
 import requests
 from settings import mdtrtarea_admvs,hospitalName,hospitalID
-from time import time
 import logging
 from typing import List
 from db.sql.yibaofuzhu.shiQianFenXiSQL import *
@@ -58,33 +57,33 @@ class FsiEncounterDtos(BaseModel):
     fsi_order_dtos:List[FsiOrderDtos] #处方信息集合
     fsi_operation_dtos:list = []#手术信息集合
     mdtrt_id:str #就诊ID
-    medins_id:str #医疗机构ID
-    medins_name:str #医疗机构名称
-    medins_admdvs:str #医疗机构管理区划代码
-    medins_type:str = 'A1' #医疗机构类型
-    medins_lv:str = '05' #医疗机构等级
-    wardarea_codg:str = '' #病区标识
-    wardno:str='' #病房号
-    bedno:str='' #床号
     adm_date:str #入院时间
-    dscg_date:str #出院日期
+    dscg_date:str  #出院日期
     dscg_main_dise_codg:str #主诊断编码
     dscg_main_dise_name:str #主诊断名称
     dr_codg:str #医生编码
     adm_dept_codg:str #入院科室编码
     adm_dept_name:str #入院科室名称
-    dscg_dept_codg:str #出诊科室编码
-    dscg_dept_name:str #出诊科室名称
+    dscg_dept_codg:str #出院科室编码
+    dscg_dept_name:str #出院科室名称
     med_mdtrt_type:str #就诊类型  1门诊 2住院 3购药 4其他
     med_type:str #医疗类别  11普通门诊  14门诊慢特病  21普通住院
-    matn_stas:str #生育状态   0其他 1妊娠期 2哺乳期
-    medfee_sumamt:str = '-' #总费用
-    ownpay_amt:str= '-' #自费金额 
-    selfpay_amt :str= '-' #自付金额 
-    setl_totlnum :str= '-' #结算总数 
-    insutype:str='' #险种 310 390    
+    matn_stas:str = '0' #生育状态   0其他 1妊娠期 2哺乳期
+    medfee_sumamt:str = '0' #总费用
+    ownpay_amt:str= '0' #自费金额 
+    selfpay_amt :str= '0' #自付金额 
+    setl_totlnum :str= '1' #结算总数 
+    insutype:str='310' #险种 310 390    
     reim_flag:str='1'   
     out_setl_flag:str='2' #2医疗机构 3省内异地 4跨省异地
+    medins_type:str = 'A1' #医疗机构类型
+    medins_lv:str = '05' #医疗机构等级
+    wardarea_codg:str = '' #病区标识
+    wardno:str='' #病房号
+    bedno:str='' #床号
+    medins_id:str = hospitalID  #医疗机构ID
+    medins_name:str = hospitalName #医疗机构名称
+    medins_admdvs:str = mdtrtarea_admvs #医疗机构管理区划代码
 
 class PatientDtos(BaseModel):
     fsi_encounter_dtos:List[FsiEncounterDtos] #就诊信息集合
@@ -93,12 +92,12 @@ class PatientDtos(BaseModel):
     patn_name:str #姓名
     gend:str #性别
     brdy:str #出生日期
-    poolarea:str #统筹区编码
+    poolarea:str = mdtrtarea_admvs #统筹区编码
     curr_mdtrt_id:str #当前就诊ID
     
 
 class ShiQianFenXiXinXi(BaseModel):
-    patient_dtos:List[PatientDtos] = [] #参保人信息
+    patient_dtos:List[PatientDtos]  #参保人信息
     trig_scen:str #触发场景   1门诊挂号;2门诊收费登记;3住院登记;4住院收费登记;5住院执行医嘱；6门诊结算;7门诊预结算;8住院结算;9住院预结算;
     rule_ids:list = [] #规则ID集合
 
@@ -124,7 +123,7 @@ class YiZhuXinXi(BaseModel):
 @shiqianfenxiAPI.post("/shiQianFenXi")
 async def shiQianFenXi(request: Request,yzxx:YiZhuXinXi):
     '''
-    3101 明细审核事前分析服务
+    分析门诊
     '''
     if not hasattr(request.app.state,'fryid'):
         return {'code':2,'result':'无登录信息'}
@@ -350,6 +349,16 @@ async def getZhuYuanBingRenXinXi(request: Request,zyxx:ZhuYuanXinXi):
     else:
         data = [dict(zip(columns, row)) for row in rows]
         responJson = { 'code':0,'result':data }
+
+    rows, columns = execute_query( getZongFeiYongSQL,( zyxx.jzid ,zyxx.brid ) )
+    if len(rows) == 0:
+        responJson = {'code':1,'result':'费用信息'}
+        return  responJson
+    else:
+        data = [dict(zip(columns, row)) for row in rows]
+        responJson['medfee_sumamt'] = data[0]['medfee_sumamt']
+    
+
     
     return responJson
 
@@ -372,4 +381,38 @@ async def getZhuYuanChuFangXinXi(request: Request,zyxx:ZhuYuanXinXi):
         data = [dict(zip(columns, row)) for row in rows]
         responJson = { 'code':0,'result':data }
     
+    return responJson
+
+
+
+@shiqianfenxiAPI.post('/fenXiZhuYuan')
+async def fenXiZhuYuan(request: Request,sqfx:ShiQianFenXiXinXi):
+    '''
+    分析住院
+    '''
+
+    if not hasattr(request.app.state,'fryid'):
+        return {'code':2,'result':'无登录信息'}
+    fryid = request.app.state.fryid
+    fryno = request.app.state.username
+    fname = request.app.state.fname
+
+    responJson = {}
+    requestjson = {
+        'data':json.loads(sqfx.json(ensure_ascii=False))
+    }
+
+    requestURL,postdata,posthead = create_request_Data('3101',requestjson,opter=fryno,opter_name=fname)
+    logger.info(f'用户:{fname}，3101入参:{postdata}')
+    response = requests.post(requestURL,data=postdata.encode('utf-8'),headers=posthead)
+    outputdata = json.loads(response.text)
+    logger.info(f'用户:{fname}，3101出参:{outputdata}')
+
+    responJson = {'code':1,'result':'失败'}
+    if outputdata :
+        if outputdata['infcode'] == 0:
+            output = outputdata['output']
+            responJson = {'code':0,'result':output}
+        else :
+            responJson = {'code':outputdata['infcode'],'result':outputdata['err_msg']}
     return responJson

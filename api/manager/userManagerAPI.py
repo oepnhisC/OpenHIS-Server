@@ -29,7 +29,7 @@ async def addUser(request:Request,user:User):
     try:
         commit_query(addUserSQL,(user.username,hashedPassword))
     except Exception as e:
-        print(e)
+        logger.error(e)
         responJson = {'code':2,'result':'用户添加失败'}
         return responJson
 
@@ -101,7 +101,7 @@ async def addRoleToUser(request:Request,userrole:UserRole):
     try:
         commit_query(addRoleToUserSQL,(userrole.userid,userrole.roleid))
     except Exception as e:
-        print(e)
+        logger.error(e)
         responJson = {'code':2,'result':'角色添加失败'}
         return responJson
 
@@ -136,3 +136,30 @@ async def resetPassword(request: Request,up:UserPassword):
         logger.error(e)
         return {'code':2,'result':'修改密码失败'}
     return {'code':0,'result':'密码修改成功'}
+
+
+
+
+@userManagerAPI.post("/delRoleFromUser")
+async def addRoleToUser(request:Request,userrole:UserRole):
+    '''
+    从用户中删除角色
+    '''
+    responJson = {}
+    if not userrole.userid or not userrole.roleid:
+        responJson = {'code':2,'result':'用户ID或角色ID不能为空'}
+        return responJson
+    
+    rows, columns = execute_query(selectOneUserRoleSQL,(userrole.userid,userrole.roleid))
+    if len(rows)== 0:
+        responJson = {'code':2,'result':'该用户无该角色'}
+        return responJson
+
+    try:
+        commit_query(delRoleFromUserSQL,(userrole.userid,userrole.roleid))
+    except Exception as e:
+        logger.error(e)
+        responJson = {'code':2,'result':'删除角色失败'}
+        return responJson
+    responJson = {'code':0,'result':'角色删除成功'}
+    return responJson
